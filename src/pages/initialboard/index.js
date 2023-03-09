@@ -1,22 +1,32 @@
 import { Box, Grid } from "@mui/material";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useReducer, useState } from "react";
 import MediaCard from "../../components/MediaCard";
 import PrimarySearchAppBar from "../../components/PrimarySearchAppBar";
 import { getChars } from "../../services/SwapiService";
+import { CHAR_TYPES } from "../../store/actions/actionChar";
+import { charInitialState, charReducer } from "../../store/reducers/charReducer";
 
 
 const InitialBoard = () => {
-  const [characters, setChatacters] = useState([]);
+  const [state, dispatch] = useReducer(charReducer,charInitialState );
+  const [characters, setCharacters] = useState([]);
+  const {chars} = state;
 
-  const chars = () => { getChars().then(chars => {
-    console.log("Chars :", chars.results);
-    setChatacters(chars.results);
-
-  });}
-
+  const loadChars = () => { 
+    getChars()
+    .then(chars => {
+      const charsWithId = chars?.results.map((char, index) => {
+        char.id = index+1;
+        return char;
+      })
+      console.log("Chars :", charsWithId);
+      setCharacters(charsWithId);
+      dispatch({type: CHAR_TYPES.LOAD_CHARS, payload: charsWithId});
+    })
+  ;}
 
   useEffect( () => { 
-    chars();
+    loadChars();
   },[])
 
   return(
@@ -24,12 +34,12 @@ const InitialBoard = () => {
       <PrimarySearchAppBar/>
       <Box sx={{ flexGrow: 1 }}>
         <Grid container spacing={1}>
-          { characters?.map((char, index) => 
-            <Grid container item spacing={3} key={index}>
-              <Grid item xs={4}>
+          { chars?.map((char) => 
+            <> { console.log("char :"+ char.id, char) }
+              <Grid item xs={4} key={char.id}>
                 <MediaCard charObject={char}/>
               </Grid>   
-            </Grid>)} 
+            </>)} 
         </Grid>
       </Box>
     </>
